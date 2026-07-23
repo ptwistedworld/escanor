@@ -1,0 +1,42 @@
+# Escanor Purple Team Playbook: EDR Evasion Testing
+# This playbook tests EDR evasion techniques using EDRSilencer
+
+name: edr_evasion_testing
+description: Comprehensive EDR/AV evasion testing and payload generation
+version: "1.0"
+author: Escanor Team
+
+modules:
+  - name: edrsilencer
+    options:
+      edrsilencer_path: /opt/EDRSilencer
+      output_format: json
+    actions:
+      - action: run
+        description: List available EDRSilencer techniques
+      
+      - action: list_techniques
+        description: Enumerate all evasion techniques
+      
+      - action: test_evasion
+        parameters:
+          payload_type: shellcode
+          techniques:
+            - unhooking
+            - patching
+            - direct_syscall
+        description: Test multiple evasion techniques
+      
+      - action: generate_evasive_payload
+        parameters:
+          payload_type: shellcode
+          encoding: base64
+        description: Generate evasive shellcode payload
+
+execution_order: sequential
+on_failure: continue
+output_format: json
+report:
+  enabled: true
+  format: markdown
+  include_recommendations: true

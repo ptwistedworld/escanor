@@ -1,0 +1,92 @@
+# Escanor Purple Team Playbook: Full Attack Simulation
+# End-to-end attack simulation combining reconnaissance, C2 deployment, and evasion
+
+name: full_attack_simulation
+description: Complete purple team attack simulation from initial access to persistence
+version: "1.0"
+author: Escanor Team
+
+modules:
+  # Phase 1: Reconnaissance
+  - name: network_scanner
+    options:
+      target_range: 192.168.1.0/24
+      ports: "80,443,445,3389,8080"
+    actions:
+      - action: run
+        description: Scan network for live hosts
+
+  # Phase 2: Initial Access via C2
+  - name: empire_c2
+    options:
+      empire_host: localhost
+      empire_port: "1337"
+      username: empireadmin
+      password: password123
+    actions:
+      - action: run
+        description: Initialize Empire C2
+      
+      - action: create_listener
+        parameters:
+          name: http_listener
+          listener_type: http
+        description: Create HTTP listener
+
+  # Phase 3: Evasion Testing
+  - name: edrsilencer
+    options:
+      edrsilencer_path: /opt/EDRSilencer
+    actions:
+      - action: apply_technique
+        parameters:
+          technique_name: unhooking
+        description: Apply API unhooking technique
+
+  # Phase 4: Post-Exploitation with PoshC2
+  - name: poshc2
+    options:
+      poshc2_database: /var/lib/poshc2/poshc2.db
+    actions:
+      - action: run
+        description: Check PoshC2 status
+      
+      - action: generate_payload
+        parameters:
+          payload_type: powershell
+        description: Generate PowerShell payload
+
+  # Phase 5: Alternative C2 with Koadic
+  - name: koadic
+    options:
+      koadic_path: /opt/koadic
+      listener_host: 0.0.0.0
+      listener_port: "9999"
+    actions:
+      - action: start_listener
+        description: Start Koadic listener
+      
+      - action: generate_stager
+        parameters:
+          stager_type: js/mshta
+        description: Generate MSHTA stager
+
+execution_order: sequential
+on_failure: halt
+output_format: json
+
+phases:
+  - name: Reconnaissance
+    modules: [network_scanner]
+  - name: Initial Access
+    modules: [empire_c2]
+  - name: Evasion
+    modules: [edrsilencer]
+  - name: Post-Exploitation
+    modules: [poshc2, koadic]
+
+report:
+  enabled: true
+  format: html
+  include_timeline: true
+  include_iocs: true
