@@ -74,6 +74,9 @@ class InteractiveShell:
             'exit': self._cmd_exit,
             'quit': self._cmd_exit,
             'info': self._cmd_info,
+            'execute': self._cmd_execute,
+            'search': self._cmd_search,
+            'banner': self._cmd_banner,
         }
         
         if cmd in commands:
@@ -91,6 +94,7 @@ Core Commands:
   help              Show this help message
   use <module>      Select a module to use
   run               Execute the current module
+  execute <module> [opts]  Run a module directly without loading (one-liner)
   set <opt> <val>   Set a module option
   show [options]    Show module options or info
   back              Deselect current module
@@ -98,6 +102,7 @@ Core Commands:
 
 Module Management:
   list [category]   List modules (optionally by category)
+  search <term>     Search modules by name or description
   reload            Reload all modules
 
 Playbooks:
@@ -107,6 +112,9 @@ Playbooks:
 AI Integration:
   ai <query>        Run AI-assisted command
 
+Display:
+  banner            Redisplay the Escanor banner
+
 Session:
   exit/quit         Exit the framework
 
@@ -115,6 +123,8 @@ Examples:
   set TARGET 192.168.1.1
   set PORTS 1-1000
   run
+  execute exploitation/privesc/godpotato cmd="whoami"
+  search potato
   ai "suggest next steps for target 192.168.1.1"
         """
         print(help_text)
@@ -262,3 +272,77 @@ Examples:
             print("\nCurrent Module Information:")
             for key, value in info.items():
                 print(f"  {key.capitalize()}: {value}")
+
+    def _cmd_execute(self, args: list) -> None:
+        """Execute a module directly without loading it first (one-liner execution)"""
+        if not args:
+            print("[!] Usage: execute <module_name> [option=value ...]")
+            print("    Example: execute exploitation/privesc/godpotato cmd=\"whoami\"")
+            return
+        
+        module_name = args[0]
+        module = self.module_manager.get_module(module_name)
+        
+        if not module:
+            print(f"[!] Module not found: {module_name}")
+            print("[*] Use 'list' to see available modules or 'search <term>' to find modules")
+            return
+        
+        # Parse additional arguments as options
+        options = {}
+        for arg in args[1:]:
+            if '=' in arg:
+                key, value = arg.split('=', 1)
+                # Remove quotes if present
+                value = value.strip('"').strip("'")
+                options[key] = value
+        
+        # Set options on the module
+        for opt_name, opt_value in options.items():
+            module.set_option(opt_name, opt_value)
+        
+        print(f"\n[*] Executing module: {module_name}")
+        if options:
+            print(f"[*] Options: {options}")
+        
+        # Execute the module
+        result = self.module_manager.run_module(module_name, verbose=True)
+        
+        if result and result.success:
+            print("\n[+] Module execution completed successfully")
+        elif result:
+            print(f"\n[-] Module execution failed: {result.error}")
+
+    def _cmd_search(self, args: list) -> None:
+        """Search modules by name or description"""
+        if not args:
+            print("[!] Usage: search <search_term>")
+            return
+        
+        search_term = ' '.join(args).lower()
+        categories = self.module_manager.list_modules()
+        
+        results = []
+        for category, modules in categories.items():
+            for mod_name in modules:
+                full_name = f"{category}/{mod_name}"
+                module = self.module_manager.get_module(full_name)
+                
+                if module:
+                    # Search in name, display_name, description, and category
+                    searchable_text = f"{module.name} {module.display_name} {module.description} {module.category}".lower()
+                    if search_term in searchable_text:
+                        results.append((full_name, module))
+        
+        if results:
+            print(f"\n[+] Found {len(results)} module(s) matching '{search_term}':\n")
+            for full_name, module in results:
+                print(f"  - {full_name:<40} {module.description[:50]}")
+            print()
+        else:
+            print(f"\n[-] No modules found matching '{search_term}'")
+
+    def _cmd_banner(self, args: list) -> None:
+        """Redisplay the Escanor banner"""
+        from escanor import print_banner
+        print_banner()

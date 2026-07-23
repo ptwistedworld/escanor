@@ -12,6 +12,22 @@ from core.playbook_engine import PlaybookEngine
 from lib.ai_integration import AIIntegration
 
 
+def print_banner():
+    """Display the Escanor banner"""
+    banner = r"""
+  ______     __  __     ______     __   __     ______     ______    
+ /\  ___\   /\ \/\ \   /\  __ \   /\ "-.\ \   /\  __ \   /\  _  \   
+ \ \ \____  \ \ \_\ \  \ \  __ \  \ \ \-.  \  \ \  __ \  \ \ \L\ \  
+  \ \_____\  \ \_____\  \ \_\ \_\  \ \_\\"\_\  \ \_\ \_\  \ \____ \ 
+   \/_____/   \/_____/   \/_/\/_/   \/_/ \/_/   \/_/\/_/   \/___L\ \
+                                                             /\____/
+                                                             \_/__/ 
+           Advanced Purple Teaming Framework v1.0
+           Powered by AI | Modular | Extensible
+    """
+    print(banner)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Escanor - Advanced Purple Teaming Framework",
@@ -40,6 +56,7 @@ Examples:
     ai_integration = AIIntegration()
     
     if args.list_modules:
+        print_banner()
         print("\n[+] Available Modules:")
         modules = module_manager.list_modules()
         for category, mods in modules.items():
@@ -49,6 +66,7 @@ Examples:
         return
     
     if args.list_playbooks:
+        print_banner()
         print("\n[+] Available Playbooks:")
         playbooks = playbook_engine.list_playbooks()
         for pb in playbooks:
@@ -69,17 +87,7 @@ Examples:
         return
     
     # Default: Launch interactive shell
-    print(r"""
-  ███████╗██╗  ██╗ █████╗ ██████╗ ██╗      ██████╗ ██╗    ██╗███████╗
-  ██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗██║     ██╔═══██╗██║    ██║██╔════╝
-  ███████╗ ╚███╔╝ ███████║██████╔╝██║     ██║   ██║██║ █╗ ██║███████╗
-  ╚════██║ ██╔██╗ ██╔══██║██╔══██╗██║     ██║   ██║██║███╗██║╚════██║
-  ███████║██╔╝ ██╗██║  ██║██║  ██║███████╗╚██████╔╝╚███╔███╔╝███████║
-  ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚══╝╚══╝ ╚══════╝
-  
-           Advanced Purple Teaming Framework v1.0
-           Powered by AI | Modular | Extensible
-    """)
+    print_banner()
     
     shell = InteractiveShell(module_manager, playbook_engine, ai_integration)
     shell.start()
