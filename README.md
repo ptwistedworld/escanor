@@ -26,6 +26,8 @@
 - **Lateral Movement**: Network pivoting and movement simulation
 - **Exfiltration**: Data exfiltration path analysis
 - **AI-Assisted**: Intelligent analysis and recommendations
+- **C2 Frameworks**: Integration with Empire, PoshC2, and Koadic
+- **Evasion**: EDR/AV bypass techniques via EDRSilencer
 
 ### Key Features
 1. **Easy Module Onboarding**: Create new modules by inheriting from `BaseModule`
@@ -84,6 +86,13 @@ export ESCANOR_AI_MODEL=llama3.2
 # For OpenAI
 export ESCANOR_AI_PROVIDER=openai
 export ESCANOR_AI_API_KEY=your-api-key-here
+
+# For C2 Frameworks
+export EMPIRE_HOST=localhost
+export EMPIRE_PORT=1337
+export POSHC2_DATABASE=/var/lib/poshc2/poshc2.db
+export KOADIC_PATH=/opt/koadic
+export EDRSILENCER_PATH=/opt/EDRSilencer
 ```
 
 ---
@@ -152,12 +161,21 @@ escanor/
 │   ├── persistence/         # Persistence modules
 │   ├── lateral_movement/    # Lateral movement modules
 │   ├── exfiltration/        # Exfiltration modules
-│   └── ai_assisted/         # AI-powered modules
-│       └── ai_analyze.py
+│   ├── ai_assisted/         # AI-powered modules
+│   │   └── ai_analyze.py
+│   ├── c2_frameworks/       # C2 Framework integrations
+│   │   ├── empire_c2.py     # Empire C2 integration
+│   │   ├── poshc2.py        # PoshC2 integration
+│   │   └── koadic.py        # Koadic integration
+│   └── evasion/             # EDR/AV evasion
+│       └── edrsilencer.py   # EDRSilencer integration
 ├── playbooks/               # Assessment playbooks
 │   ├── basic_recon.yaml
 │   ├── web_app_assessment.yaml
-│   └── purple_team.yaml
+│   ├── purple_team.yaml
+│   ├── c2_framework_coordination.yaml
+│   ├── edr_evasion_testing.yaml
+│   └── full_attack_simulation.yaml
 ├── lib/                     # Library modules
 │   ├── __init__.py
 │   └── ai_integration.py    # AI backend integration
@@ -254,6 +272,9 @@ steps:
 | `basic_recon` | Basic reconnaissance | Initial target assessment |
 | `web_app_assessment` | Web app security | Comprehensive web testing |
 | `purple_team` | Full purple team | Red + Blue team exercises |
+| `c2_framework_coordination` | C2 framework integration | Coordinated Empire, PoshC2, Koadic operations |
+| `edr_evasion_testing` | EDR/AV evasion testing | Test bypass techniques with EDRSilencer |
+| `full_attack_simulation` | End-to-end attack simulation | Complete purple team exercise |
 
 ---
 
@@ -351,8 +372,11 @@ See the `/docs` directory for detailed documentation:
 
 Inspired by and compatible with concepts from:
 - [KittySploit Framework](https://github.com/SIA-IOTechnology/Kittysploit-framework)
+- [Empire C2](https://github.com/BC-SECURITY/Empire) - Post-exploitation framework
+- [PoshC2](https://github.com/nettitude/PoshC2) - PowerShell and C# post-exploitation
+- [Koadic](https://github.com/offsecginger/koadic) - COM-based post-exploitation
+- [EDRSilencer](https://github.com/netero1010/EDRSilencer) - EDR/AV evasion techniques
 - Metasploit Framework
-- Empire Project
 - Covenant C2
 
 ---
