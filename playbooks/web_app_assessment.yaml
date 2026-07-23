@@ -1,0 +1,46 @@
+name: "Web Application Assessment"
+description: "Comprehensive web application security assessment playbook"
+author: "Escanor Team"
+created: "2024-01-01"
+version: "1.0.0"
+
+steps:
+  - module: "reconnaissance/port_scan"
+    description: "Identify web service ports"
+    options:
+      PORTS: "80,443,8080,8443,8000"
+      PROTOCOL: "tcp"
+      TIMEOUT: "2"
+    enabled: true
+    critical: true
+    
+  - module: "reconnaissance/web_scan"
+    description: "Analyze web server configuration"
+    options:
+      PORT: "80"
+      USE_SSL: "False"
+      CHECK_HEADERS: "True"
+    enabled: true
+    critical: true
+    
+  - module: "reconnaissance/web_scan"
+    description: "Analyze HTTPS configuration"
+    options:
+      PORT: "443"
+      USE_SSL: "True"
+      CHECK_HEADERS: "True"
+    enabled: true
+    critical: false
+    
+  - module: "reconnaissance/vuln_scan"
+    description: "Check for web vulnerabilities"
+    options: {}
+    enabled: true
+    critical: false
+    
+  - module: "ai_assisted/ai_analyze"
+    description: "AI-powered analysis and recommendations"
+    options:
+      OBJECTIVE: "web_assessment"
+    enabled: true
+    critical: false

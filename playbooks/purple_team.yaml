@@ -1,0 +1,44 @@
+name: "Purple Team Exercise"
+description: "Complete purple team assessment with AI assistance"
+author: "Escanor Team"
+created: "2024-01-01"
+version: "1.0.0"
+
+steps:
+  - module: "ai_assisted/ai_analyze"
+    description: "AI-powered initial analysis and planning"
+    options:
+      OBJECTIVE: "full"
+    enabled: true
+    critical: false
+    
+  - module: "reconnaissance/port_scan"
+    description: "Network reconnaissance"
+    options:
+      PORTS: "1-65535"
+      PROTOCOL: "tcp"
+      TIMEOUT: "1"
+    enabled: true
+    critical: true
+    
+  - module: "reconnaissance/web_scan"
+    description: "Web service enumeration"
+    options:
+      PORT: "80"
+      CHECK_HEADERS: "True"
+    enabled: true
+    critical: false
+    
+  - module: "reconnaissance/vuln_scan"
+    description: "Vulnerability identification"
+    options: {}
+    enabled: true
+    critical: false
+    
+  - module: "ai_assisted/ai_analyze"
+    description: "AI analysis of findings for blue team detection opportunities"
+    options:
+      CONTEXT: "Focus on detection and mitigation strategies"
+      OBJECTIVE: "defensive"
+    enabled: true
+    critical: false
