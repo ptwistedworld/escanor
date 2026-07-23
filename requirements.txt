@@ -1,0 +1,19 @@
+# Escanor Framework Dependencies
+
+# Core dependencies
+pyyaml>=6.0
+requests>=2.28.0
+
+# Optional: For enhanced functionality
+# python-nmap>=0.7.1  # Nmap integration
+# beautifulsoup4>=4.11.0  # Web parsing
+# cryptography>=38.0.0  # Cryptographic operations
+
+# AI/ML (optional)
+# torch>=2.0.0  # For local ML models
+# transformers>=4.30.0  # Hugging Face transformers
+
+# Development
+# pytest>=7.0.0  # Testing
+# black>=23.0.0  # Code formatting
+# flake8>=6.0.0  # Linting
