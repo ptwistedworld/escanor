@@ -1,417 +1,224 @@
-# Escanor Framework
-
-## Advanced Purple Teaming Framework
-
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Python](https://img.shields.io/badge/python-3.8+-green)
-![License](https://img.shields.io/badge/license-MIT-yellow)
-
-**Escanor** is an advanced, AI-powered purple teaming framework designed for cybersecurity teams to conduct comprehensive security assessments, penetration testing, and defensive analysis. Inspired by modern frameworks like KittySploit, Escanor enhances capabilities with modular architecture, playbook automation, and integrated AI assistance.
+# ☀️ ESCANOR // PURPLE TEAM FRAMEWORK
+> **"The sun never sets on Escanor."**  
+> *A modular, AI-enhanced offensive security framework for Red, Blue, and Purple teams.*
 
 ---
 
-## 🚀 Features
+## 🚀 Tactical Overview
 
-### Core Capabilities
-- **Modular Architecture**: Easily extendable module system organized by category
-- **Interactive Shell**: Intuitive command-line interface with contextual help
-- **Playbook Engine**: Curated module sequences for routine assessment tasks
-- **AI Integration**: Smart analysis powered by Ollama, OpenAI, or other LLM backends
-- **Purple Teaming**: Balanced offensive and defensive perspectives
+**Escanor** is not just another scanner; it is a unified command center for simulating advanced persistent threats (APTs). It bridges the gap between discrete security tools and cohesive attack simulations. By integrating industry-standard frameworks (Empire, PoshC2, Koadic) with cutting-edge Azure/Entra ID tools (TokenTacticsV2, roadtools, MSOLSpray) and privilege escalation utilities (GodPotato, PrintSpoofer), Escanor provides a single interface for end-to-end attack chain execution.
 
-### Module Categories
-- **Reconnaissance**: Port scanning, web enumeration, vulnerability detection
-- **Exploitation**: Safe exploitation modules for authorized testing
-- **Persistence**: Post-exploitation persistence mechanisms (simulation)
-- **Lateral Movement**: Network pivoting and movement simulation
-- **Exfiltration**: Data exfiltration path analysis
-- **AI-Assisted**: Intelligent analysis and recommendations
-- **C2 Frameworks**: Integration with Empire, PoshC2, and Koadic
-- **Evasion**: EDR/AV bypass techniques via EDRSilencer
-
-### Key Features
-1. **Easy Module Onboarding**: Create new modules by inheriting from `BaseModule`
-2. **Template Playbooks**: Pre-built assessment workflows
-3. **AI-Powered Insights**: Automated analysis and recommendations
-4. **Comprehensive Logging**: Detailed operation tracking
-5. **Extensible Design**: Plugin-friendly architecture
+### 💡 Core Capabilities
+*   **🧩 Modular Architecture**: Drop-in modules for Recon, Exploitation, C2, Evasion, and Cloud.
+*   **🤖 Optional AI Brain**: Embed LLMs (Ollama/OpenAI) for dynamic analysis and report summarization (*fully optional, works standalone*).
+*   **📜 Playbook Engine**: Curated attack chains for routine assessments or custom scenarios.
+*   **🎯 Precision Execution**: Run individual modules with granular control or execute full playbooks.
+*   **📝 Automated Reporting**: Every action generates detailed, standardized TXT and JSON reports in `./results/`.
+*   **☁️ Hybrid Cloud/On-Prem**: Seamless transition from Azure Entra ID abuse to On-Prem AD domination.
 
 ---
 
-## 📋 Requirements
+## 🛠️ Integration Matrix
 
-- Python 3.8+
-- Linux/macOS/Windows (with WSL)
-- Optional: Ollama or OpenAI API for AI features
+Escanor acts as the orchestration layer for the following battle-tested tools:
 
-### Dependencies
+| Category | Integrated Tool | Purpose | Escanor Module |
+| :--- | :--- | :--- | :--- |
+| **C2 Frameworks** | **Empire** (BC-Security) | Post-exploitation agent | `c2_frameworks/empire_c2` |
+| | **PoshC2** (Nettitude) | PowerShell/C# C2 | `c2_frameworks/poshc2` |
+| | **Koadic** | COM-based C2 | `c2_frameworks/koadic` |
+| **Azure/Entra ID** | **TokenTacticsV2** | OAuth token abuse & lateral movement | `cloud/entra/token_tactics` |
+| | **roadtools** | Entra ID enumeration & analysis | `cloud/entra/roadtools_enum` |
+| | **MSOLSpray** | Password spraying against Azure AD | `cloud/entra/msolspray` |
+| | **BARK** | BloodHound Automated Collection | `ad/bark_collector` |
+| **Phishing/Proxy** | **Modlishka** | Reverse proxy phishing & MFA bypass | `phishing/modlishka_proxy` |
+| **PrivEsc (Win)** | **GodPotato** | Local Privilege Escalation | `exploitation/privesc/godpotato` |
+| | **SigmaPotato** | Alternative LPE vector | `exploitation/privesc/sigmapotato` |
+| | **PrintSpoofer** | Printer bug exploitation | `exploitation/privesc/printspoofer` |
+| **Evasion** | **EDRSilencer** | Disable EDR hooks/drivers | `evasion/edrsilencer` |
+
+---
+
+## ⚡ Quick Start: Operator's Guide
+
+### 1. Installation
+Ensure Python 3.9+ is installed. No complex dependencies are required for the core framework.
 
 ```bash
-pip install pyyaml requests
+git clone https://github.com/YOUR_ORG/Escanor.git
+cd Escanor
+pip install -r requirements.txt  # Optional: only for AI features and specific libs
 ```
 
-For AI features:
-- **Ollama** (local): Install from [ollama.ai](https://ollama.ai)
-- **OpenAI** (cloud): Set `ESCANOR_AI_API_KEY` environment variable
-
----
-
-## 🛠️ Installation
-
-### Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/your-org/escanor.git
-cd escanor
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Make executable
-chmod +x escanor.py
-
-# Run the framework
-python3 escanor.py
-```
-
-### Environment Configuration (Optional)
-
-```bash
-# For Ollama (default)
-export ESCANOR_AI_PROVIDER=ollama
-export ESCANOR_AI_URL=http://localhost:11434
-export ESCANOR_AI_MODEL=llama3.2
-
-# For OpenAI
-export ESCANOR_AI_PROVIDER=openai
-export ESCANOR_AI_API_KEY=your-api-key-here
-
-# For C2 Frameworks
-export EMPIRE_HOST=localhost
-export EMPIRE_PORT=1337
-export POSHC2_DATABASE=/var/lib/poshc2/poshc2.db
-export KOADIC_PATH=/opt/koadic
-export EDRSILENCER_PATH=/opt/EDRSilencer
-```
-
----
-
-## 📖 Usage
-
-### Interactive Shell
-
+### 2. Launch the Shell
+Enter the interactive command center:
 ```bash
 python3 escanor.py
 ```
 
-Once in the shell:
+You will be greeted by the Escanor prompt:
+```text
+      _______  __   __  _______  __    _  ___   _ 
+     |       ||  | |  ||   _   ||  |  | ||   | | |
+     |    ___||  |_|  ||  |_|  ||   |_| ||   |_| |
+     |   | __ |       ||       ||       ||      _|
+     |   ||  ||       ||       ||  _    ||     |_ 
+     |   |_| ||   _   ||   _   || | |   ||    _  |
+     |_______||__| |__||__| |__||_|  |__||___| |_|
+     
+     [ESCANOR v2.0] :: Purple Team Operations Center
+     Type 'help' for commands, 'modules' to list capabilities.
 
-```
-escanor> help          # Show available commands
-escanor> list          # List all modules
-escanor> use reconnaissance/port_scan
-escanor:reconnaissance/port_scan> set TARGET 192.168.1.1
-escanor:reconnaissance/port_scan> set PORTS 1-1000
-escanor:reconnaissance/port_scan> run
-escanor:reconnaissance/port_scan> back
-escanor> playbook basic_recon
-escanor> ai "analyze target 192.168.1.1"
-escanor> exit
+escanor> 
 ```
 
-### Command-Line Mode
+### 3. Execution Modes
+
+#### 🎯 Mode A: Targeted Module Execution
+Run a specific tool with custom arguments. Ideal for precise testing.
 
 ```bash
-# List modules
-python3 escanor.py --list-modules
+# Example: Spray passwords against Entra ID
+escanor> execute cloud/entra/msolspray USER_FILE=users.txt PASS_FILE=pass.txt TENANT=contoso.onmicrosoft.com --operator "RedTeamAlpha" --notes "Initial access attempt"
 
-# List playbooks
-python3 escanor.py --list-playbooks
+# Example: Launch Modlishka for MFA phishing
+escanor> execute phishing/modlishka_proxy TARGET_URL=https://office365.com LISTEN_PORT=443 PHISH_DOMAIN=login-secure.com
 
-# Run a specific module
-python3 escanor.py --module reconnaissance/port_scan --verbose
+# Example: Enumerate Azure AD with roadtools
+escanor> execute cloud/entra/roadtools_enum METHOD=graph OUTPUT_FORMAT=json
+```
 
-# Execute a playbook
-python3 escanor.py --playbook basic_recon --verbose
+#### 📜 Mode B: Playbook Execution
+Execute a curated sequence of modules for a specific scenario.
 
-# AI-assisted query
-python3 escanor.py --ai "What are common web vulnerabilities?"
+```bash
+# List available playbooks
+escanor> playbooks
+
+# Run the Azure Breach Simulation
+escanor> run playbook azure_breach_simulation --operator "BlueTeamLead" --notes "Q3 Assessment"
+
+# Run the Full Hybrid Attack (Cloud -> OnPrem)
+escanor> run playbook ad_cloud_hybrid
+```
+
+### 4. Reviewing Results
+Escanor automatically generates reports for every execution.
+
+```bash
+# List recent reports
+escanor> reports
+
+# View the latest report in detail
+escanor> report 1
+
+# Reports are saved to ./results/ as both .txt (human-readable) and .json (machine-parseable)
 ```
 
 ---
 
-## 📁 Project Structure
+## 📂 Directory Structure
 
-```
-escanor/
-├── escanor.py          # Main entry point
-├── core/                    # Core framework components
-│   ├── __init__.py
-│   ├── base_module.py       # Base module class
-│   ├── module_manager.py    # Module loading & execution
-│   ├── interactive_shell.py # CLI interface
-│   └── playbook_engine.py   # Playbook execution
-├── modules/                 # Security modules
-│   ├── reconnaissance/      # Recon modules
-│   │   ├── port_scan.py
-│   │   ├── web_scan.py
-│   │   └── vuln_scan.py
-│   ├── exploitation/        # Exploitation modules
-│   ├── persistence/         # Persistence modules
-│   ├── lateral_movement/    # Lateral movement modules
-│   ├── exfiltration/        # Exfiltration modules
-│   ├── ai_assisted/         # AI-powered modules
-│   │   └── ai_analyze.py
-│   ├── c2_frameworks/       # C2 Framework integrations
-│   │   ├── empire_c2.py     # Empire C2 integration
-│   │   ├── poshc2.py        # PoshC2 integration
-│   │   └── koadic.py        # Koadic integration
-│   └── evasion/             # EDR/AV evasion
-│       └── edrsilencer.py   # EDRSilencer integration
-├── playbooks/               # Assessment playbooks
-│   ├── basic_recon.yaml
-│   ├── web_app_assessment.yaml
-│   ├── purple_team.yaml
-│   ├── c2_framework_coordination.yaml
-│   ├── edr_evasion_testing.yaml
-│   └── full_attack_simulation.yaml
-├── lib/                     # Library modules
-│   ├── __init__.py
-│   └── ai_integration.py    # AI backend integration
-├── utils/                   # Utility functions
-├── docs/                    # Documentation
-└── requirements.txt         # Dependencies
+```text
+Escanor/
+├── escanor.py              # Main entry point
+├── core/                   # Framework engine
+│   ├── base_module.py      # Abstract base for all modules
+│   ├── module_manager.py   # Dynamic loading & execution
+│   ├── interactive_shell.py# CLI interface
+│   ├── playbook_engine.py  # YAML playbook parser
+│   └── module_result.py    # Standardized result object
+├── modules/                # Operational capabilities
+│   ├── reconnaissance/     # Nmap, Web scanners
+│   ├── exploitation/       # GodPotato, PrintSpoofer
+│   ├── c2_frameworks/      # Empire, PoshC2, Koadic wrappers
+│   ├── cloud/entra/        # TokenTactics, roadtools, MSOLSpray
+│   ├── ad/                 # BARK, BloodHound integrations
+│   ├── phishing/           # Modlishka
+│   └── evasion/            # EDRSilencer
+├── playbooks/              # Curated attack chains
+│   ├── azure_breach_simulation.yml
+│   ├── ad_cloud_hybrid.yml
+│   └── ...
+├── utils/
+│   └── result_reporter.py  # Report generation logic
+├── lib/
+│   └── ai_integration.py   # Optional AI logic
+├── results/                # Auto-generated reports (TXT/JSON)
+└── docs/
+    └── COMPLETE_DOCUMENTATION.md
 ```
 
 ---
 
-## 🔧 Creating Custom Modules
+## 🧠 AI Integration (Optional)
 
-### Module Template
+Escanor stands fully functional without AI. However, for enhanced analysis, you can enable LLM support.
 
-```python
-#!/usr/bin/env python3
-"""
-Your Module Description
-"""
-
-from typing import Dict, Any
-from core.base_module import BaseModule
-
-
-class YourModule(BaseModule):
-    def __init__(self):
-        super().__init__()
-        self.name = "your_module"
-        self.category = "your_category"
-        self.description = "Module description"
-        self.author = "Your Name"
-        self.version = "1.0.0"
-        
-        self.options = {
-            'TARGET': '',
-            'OPTION2': 'default_value'
-        }
-        
-        self.required_options = ['TARGET']
-    
-    def run(self) -> Dict[str, Any]:
-        if not self.validate_options():
-            return {'success': False, 'error': 'Missing required options'}
-        
-        # Your module logic here
-        target = self.options['TARGET']
-        
-        results = {
-            'target': target,
-            'success': True
-        }
-        
-        return results
+**Configuration via Environment Variables:**
+```bash
+export ESCANOR_AI_PROVIDER="ollama"  # or "openai"
+export ESCANOR_AI_MODEL="llama3"     # or "gpt-4o"
+export ESCANOR_AI_ENDPOINT="http://localhost:11434" # For Ollama
+# export ESCANOR_API_KEY="sk-..."    # For OpenAI
 ```
 
-### Adding Your Module
-
-1. Create the file in the appropriate category folder
-2. Ensure the class name matches the filename
-3. The module will be auto-loaded on framework start
+**Capabilities when enabled:**
+*   **Smart Suggestions**: AI recommends next steps based on module output.
+*   **Report Summarization**: Converts technical logs into executive summaries.
+*   **Contextual Help**: Explains complex flags or attack vectors in real-time.
 
 ---
 
-## 📚 Playbooks
+## 📝 Reporting Standard
 
-Playbooks automate multi-module assessment workflows.
+Every operation generates a timestamped report in `./results/`.
 
-### Example Playbook (YAML)
-
-```yaml
-name: "Basic Reconnaissance"
-description: "Initial reconnaissance playbook"
-author: "Your Team"
-version: "1.0.0"
-
-steps:
-  - module: "reconnaissance/port_scan"
-    options:
-      PORTS: "1-1000"
-    enabled: true
-    critical: true
-    
-  - module: "reconnaissance/web_scan"
-    options:
-      PORT: "80"
-    enabled: true
-    critical: false
+**Format Example (`results/20231027_143022_msolspray.txt`):**
+```text
+==============================================================================
+ESCANOR OPERATION REPORT
+==============================================================================
+ID:          OP-20231027-001
+Module:      cloud/entra/msolspray
+Operator:    RedTeamAlpha
+Timestamp:   2023-10-27 14:30:22 UTC
+Duration:    4m 12s
+Notes:       Initial access attempt against dev tenant
+Status:      COMPLETED (3 Valid Credentials Found)
+------------------------------------------------------------------------------
+EXECUTION LOG:
+[+] Target: contoso.onmicrosoft.com
+[+] Loaded 500 users, 20 passwords.
+[+] SUCCESS: user.jenkins@contoso.onmicrosoft.com : Summer2023!
+[+] SUCCESS: svc_backup@contoso.onmicrosoft.com : Backup1234$
+[+] FAILED: 498 attempts blocked or invalid.
+------------------------------------------------------------------------------
+AI ANALYSIS (If Enabled):
+"The successful spray indicates weak password policies for service accounts. 
+Recommend immediate rotation and implementation of Conditional Access policies."
+==============================================================================
 ```
-
-### Available Playbooks
-
-| Playbook | Description | Use Case |
-|----------|-------------|----------|
-| `basic_recon` | Basic reconnaissance | Initial target assessment |
-| `web_app_assessment` | Web app security | Comprehensive web testing |
-| `purple_team` | Full purple team | Red + Blue team exercises |
-| `c2_framework_coordination` | C2 framework integration | Coordinated Empire, PoshC2, Koadic operations |
-| `edr_evasion_testing` | EDR/AV evasion testing | Test bypass techniques with EDRSilencer |
-| `full_attack_simulation` | End-to-end attack simulation | Complete purple team exercise |
-
----
-
-## 🤖 AI Integration
-
-Escanor supports multiple AI backends for intelligent analysis.
-
-### Supported Providers
-
-1. **Ollama** (Default - Local)
-   - Free, runs locally
-   - Supports various models (llama3.2, mistral, etc.)
-   - No API costs
-
-2. **OpenAI** (Cloud)
-   - GPT-4, GPT-3.5-turbo
-   - Requires API key
-   - Higher accuracy
-
-### AI Capabilities
-
-- **Target Analysis**: Automated attack surface identification
-- **Module Recommendations**: Suggest next steps based on findings
-- **Results Interpretation**: Explain findings and severity
-- **Report Generation**: Create professional assessment reports
-- **Technique Explanation**: Learn about attack/defense techniques
-
-### Example AI Commands
-
-```
-escanor> ai "Analyze this target: 192.168.1.1, it's a web server"
-escanor> ai "What modules should I use for Active Directory assessment?"
-escanor> ai "Explain SQL injection detection methods"
-```
-
----
-
-## 🎯 Purple Teaming Workflow
-
-### Typical Engagement
-
-1. **Planning Phase**
-   ```
-   escanor> ai "Help me plan an assessment for a financial institution"
-   ```
-
-2. **Reconnaissance**
-   ```
-   escanor> playbook basic_recon
-   ```
-
-3. **Analysis**
-   ```
-   escanor> use ai_assisted/ai_analyze
-   escanor:ai_assisted/ai_analyze> set TARGET 192.168.1.1
-   escanor:ai_assisted/ai_analyze> run
-   ```
-
-4. **Exploitation (Authorized)**
-   ```
-   escanor> use exploitation/[module]
-   ```
-
-5. **Reporting**
-   ```
-   escanor> ai "Generate a report from these findings: [paste results]"
-   ```
 
 ---
 
 ## ⚠️ Legal Disclaimer
 
-**Escanor is designed for legitimate security testing only.**
-
-- Only use against systems you own or have explicit written authorization to test
-- Unauthorized access to computer systems is illegal
-- The developers are not responsible for misuse of this framework
-- Always follow your organization's policies and applicable laws
-
----
-
-## 📝 Documentation
-
-See the `/docs` directory for detailed documentation:
-
-- [Architecture Guide](docs/architecture.md)
-- [Module Development](docs/module_development.md)
-- [API Reference](docs/api_reference.md)
-- [Playbook Guide](docs/playbooks.md)
-- [AI Integration](docs/ai_integration.md)
-
----
-
-## 🔗 Related Projects
-
-Inspired by and compatible with concepts from:
-- [KittySploit Framework](https://github.com/SIA-IOTechnology/Kittysploit-framework)
-- [Empire C2](https://github.com/BC-SECURITY/Empire) - Post-exploitation framework
-- [PoshC2](https://github.com/nettitude/PoshC2) - PowerShell and C# post-exploitation
-- [Koadic](https://github.com/offsecginger/koadic) - COM-based post-exploitation
-- [EDRSilencer](https://github.com/netero1010/EDRSilencer) - EDR/AV evasion techniques
-- Metasploit Framework
-- Covenant C2
+**Escanor** is a dual-use security framework intended strictly for authorized security testing, purple teaming exercises, and educational purposes. 
+*   **Authorization**: Ensure you have explicit written permission from the owner of any target system before scanning or attacking.
+*   **Liability**: The authors and contributors assume no liability for misuse of this software. Use at your own risk.
+*   **Compliance**: Adhere to all local, state, and federal laws regarding computer fraud and abuse.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome new modules, playbooks, and improvements. 
+1.  Fork the repository.
+2.  Create a new module inheriting from `BaseModule`.
+3.  Submit a Pull Request with a test playbook.
 
-### Ways to Contribute
-- Add new modules
-- Improve existing modules
-- Create playbooks
-- Enhance documentation
-- Report bugs and suggest features
+**"In the face of absolute power, we remain vigilant."**
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👥 Authors
-
-- Escanor Development Team
-
----
-
-## 🙏 Acknowledgments
-
-- The cybersecurity community
-- Open-source security tool developers
-- Purple team practitioners worldwide
-
----
-
-**Happy (Ethical) Hacking! 🛡️⚔️**
+*Built for the modern Purple Team. Powered by Python. Enhanced by Intelligence.*
