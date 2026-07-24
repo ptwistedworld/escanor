@@ -79,6 +79,8 @@ class InteractiveShell:
             'banner': self._cmd_banner,
             'reports': self._cmd_reports,
             'report': self._cmd_report,
+            'action': self._cmd_action,
+            'actions': self._cmd_actions,
         }
         
         if cmd in commands:
@@ -100,9 +102,14 @@ Core Commands:
   execute <module> [opts]  Run a module directly without loading (one-liner)
                            Usage: execute mod/name opt1=val1 opt2=val2
   set <opt> <val>   Set a module option
-  show [options]    Show module options or info
+  show [options|actions]  Show module options or available actions
   back              Deselect current module
   info              Show current module information
+
+Fine-Grained Actions:
+  action <name>     Select a specific action within the loaded module
+  actions           List all available actions in the current module
+                    Actions allow precise control over module behavior
 
 Module Management:
   list [category]   List modules (optionally by category)
@@ -128,15 +135,32 @@ Session:
   exit/quit         Exit the framework
 
 Examples:
+  use c2_frameworks/koadic
+  actions                        # See available actions
+  action generate_stager         # Select specific action
+  set STAGER_TYPE js/mshta
+  run -v --operator "red.team"
+  
   use reconnaissance/port_scan
   set TARGET 192.168.1.1
   set PORTS 1-1000
   run -v --operator "john.doe" --notes "Initial scan"
+  
   execute exploitation/privesc/godpotato cmd="whoami"
   search potato
   ai "suggest next steps for target 192.168.1.1"
   list cloud/entra
   playbook purple_team
+  
+Fine-Grained Attack Control:
+  Modules now support multiple actions for precise control
+  Example: A C2 module might have actions like:
+    - generate_payload: Create a payload
+    - start_listener: Start a listener
+    - execute_module: Run a module on a zombie
+    - list_zombies: List compromised hosts
+    
+  This allows you to run specific behaviors without running the entire module
         """
         print(help_text)
     
@@ -204,7 +228,7 @@ Examples:
             print(f"[!] Error setting option")
     
     def _cmd_show(self, args: list) -> None:
-        """Show module options or information"""
+        """Show module options, actions, or information"""
         if not self.current_module:
             print("[!] No module selected. Use 'use <module>' first.")
             return
@@ -213,15 +237,25 @@ Examples:
         if not module:
             return
         
-        if not args or args[0].lower() == 'options':
+        if not args or len(args) == 0:
+            # Default to showing options
             print(f"\nModule: {module.name}")
             print(f"Description: {module.description}\n")
             module.show_options()
+        elif args[0].lower() == 'options':
+            print(f"\nModule: {module.name}")
+            print(f"Description: {module.description}\n")
+            module.show_options()
+        elif args[0].lower() == 'actions':
+            module.show_actions()
         elif args[0].lower() == 'info':
             info = module.info()
             print("\nModule Information:")
             for key, value in info.items():
                 print(f"  {key.capitalize()}: {value}")
+        else:
+            print(f"[!] Unknown show argument: {args[0]}")
+            print("[*] Use 'show options', 'show actions', or 'show info'")
     
     def _cmd_back(self, args: list) -> None:
         """Deselect current module"""
@@ -450,3 +484,48 @@ Examples:
             print("[!] Invalid report number. Please provide a numeric value.")
         except Exception as e:
             print(f"[!] Error reading report: {e}")
+
+    def _cmd_action(self, args: list) -> None:
+        """Select a specific action within the current module"""
+        if not self.current_module:
+            print("[!] No module selected. Use 'use <module>' first.")
+            return
+        
+        if not args:
+            print("[!] Usage: action <action_name>")
+            print("[*] Use 'actions' to see available actions")
+            return
+        
+        action_name = args[0]
+        module = self.module_manager.get_module(self.current_module)
+        
+        if not module:
+            print(f"[!] Module not found: {self.current_module}")
+            return
+        
+        # Try to set the action
+        if module.set_action(action_name):
+            print(f"[+] Action selected: {action_name}")
+            action_def = module.get_action(action_name)
+            if action_def:
+                print(f"    Description: {action_def.description}")
+                if action_def.required_options:
+                    print(f"    Required options: {', '.join(action_def.required_options)}")
+        else:
+            print(f"[!] Action '{action_name}' not found in module '{self.current_module}'")
+            print("[*] Available actions:")
+            for name, action_def in module.list_actions().items():
+                print(f"    - {name}: {action_def.description}")
+
+    def _cmd_actions(self, args: list) -> None:
+        """List all available actions in the current module"""
+        if not self.current_module:
+            print("[!] No module selected. Use 'use <module>' first.")
+            return
+        
+        module = self.module_manager.get_module(self.current_module)
+        if not module:
+            print(f"[!] Module not found: {self.current_module}")
+            return
+        
+        module.show_actions()

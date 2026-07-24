@@ -27,12 +27,22 @@ class ResultReporter:
                      module_name: str, 
                      results: Dict[str, Any], 
                      options_used: Optional[Dict] = None,
+                     action_used: Optional[str] = None,
                      execution_time: Optional[float] = None,
                      operator: str = "unknown",
                      notes: str = "") -> str:
         """
         Write a detailed result report to a text file
         
+        Args:
+            module_name: Name of the executed module
+            results: Results dictionary from module execution
+            options_used: Dictionary of options that were set
+            action_used: Specific action that was executed (if any)
+            execution_time: Time taken to execute in seconds
+            operator: Name of the operator
+            notes: Additional notes
+            
         Returns the path to the generated report
         """
         report_id = self.generate_report_id()
@@ -43,6 +53,7 @@ class ResultReporter:
             module_name=module_name,
             results=results,
             options_used=options_used or {},
+            action_used=action_used,
             execution_time=execution_time,
             operator=operator,
             notes=notes,
@@ -58,6 +69,7 @@ class ResultReporter:
             json.dump({
                 "report_id": report_id,
                 "module_name": module_name,
+                "action_used": action_used,
                 "timestamp": datetime.now().isoformat(),
                 "options_used": options_used or {},
                 "execution_time_seconds": execution_time,
@@ -72,6 +84,7 @@ class ResultReporter:
                        module_name: str,
                        results: Dict[str, Any],
                        options_used: Dict,
+                       action_used: Optional[str],
                        execution_time: Optional[float],
                        operator: str,
                        notes: str,
@@ -91,6 +104,8 @@ class ResultReporter:
         lines.append("-" * 40)
         lines.append(f"Report ID:        {report_id}")
         lines.append(f"Module Name:      {module_name}")
+        if action_used:
+            lines.append(f"Action Executed:  {action_used}")
         lines.append(f"Timestamp:        {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         lines.append(f"Operator:         {operator}")
         if execution_time is not None:
