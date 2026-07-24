@@ -5,7 +5,7 @@ Uses AI to analyze targets and suggest attack vectors
 """
 
 from typing import Dict, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 
 
 class AIAssistant(BaseModule):

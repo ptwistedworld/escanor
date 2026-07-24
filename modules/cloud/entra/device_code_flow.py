@@ -4,7 +4,7 @@ Entra ID Device Code Flow Simulation Module
 Simulates device code authentication flow for testing and validation
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from typing import Dict, Any
 import json
 import time

@@ -7,7 +7,7 @@ Reference: https://github.com/f-bader/TokenTacticsV2
 Category: Cloud/Entra ID - Token Operations
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 import subprocess
 import json

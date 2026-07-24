@@ -7,7 +7,7 @@ Reference: https://github.com/BloodHoundAD/BARK
 Category: Cloud/Entra ID - Active Directory Relationships
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 import json
 import os

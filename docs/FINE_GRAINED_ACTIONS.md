@@ -2,79 +2,82 @@
 
 ## Overview
 
-The Escanor framework now supports **fine-grained actions** within modules, allowing you to execute specific behaviors or attacks without running an entire module's default functionality. This provides precise control over your operations.
+The Escanor framework now supports **fine-grained actions** within modules, giving you surgical precision to execute specific behaviors or attacks without running entire module workflows.
 
-## Key Concepts
+### Key Concepts
 
-### Modules vs Actions
+- **Module**: Container for related functionality (e.g., `empire_c2`, `poshc2`)
+- **Action**: Specific behavior you want to execute (e.g., `list_agents`, `generate_stager`)
+- **Playbook**: Curated templates orchestrating multiple actions
 
-- **Modules**: Contain related functionality (e.g., `c2_frameworks/koadic`)
-- **Actions**: Specific operations within a module (e.g., `generate_stager`, `start_listener`, `list_zombies`)
+## Architecture
 
-### Benefits
-
-1. **Precision**: Execute only the behavior you need
-2. **Flexibility**: Mix and match actions from different modules
-3. **Efficiency**: Skip unnecessary steps in your workflow
-4. **Playbook Control**: Define exact actions in playbooks for curated templates
-
-## Usage
-
-### Interactive Shell Commands
-
-#### List Available Actions
-
-```bash
-escanor> use c2_frameworks/koadic
-escanor: c2_frameworks/koadic> actions
-
-================================================================================
-ACTIONS AVAILABLE IN MODULE: koadic
-================================================================================
-
-Action               Description                                     Tags
---------------------------------------------------------------------------------
-   run               Execute the module's primary function           -
->>> generate_stager  Generate a stager payload for deployment        payload, offense
-   start_listener    Start a Koadic listener to receive connections  setup, listener
-   list_modules      List all available Koadic modules               recon, modules
-   list_zombies      List all active zombies (compromised hosts)     recon, zombies
-   execute_module    Execute a Koadic module on a specific zombie    execution, post-exploitation
-
-Current action: none
-
-Use 'action <name>' to select an action before running
-================================================================================
+```
+Module (Container)
+├── Action 1: list_implants
+├── Action 2: execute_command
+├── Action 3: generate_payload
+└── Action 4: get_history
 ```
 
-#### Select and Execute an Action
+## Usage Examples
+
+### Interactive Shell
 
 ```bash
-escanor> use c2_frameworks/koadic
-escanor: c2_frameworks/koadic> action generate_stager
-[+] Action selected: generate_stager
-    Description: Generate a stager payload for deployment
-    Required options: listener_host, listener_port
+# Load a module
+escanor> use c2_frameworks/poshc2
 
-escanor: c2_frameworks/koadic> set LISTENER_HOST 192.168.1.100
-LISTENER_HOST => 192.168.1.100
+# View available actions
+escanor: poshc2> actions
 
-escanor: c2_frameworks/koadic> set LISTENER_PORT 4444
-LISTENER_PORT => 4444
+Available Actions:
+  [!] action               Description                              Tags
+  ────────────────────────────────────────────────────────────────────────
+  [+] list_implants        List all active PoshC2 implants          recon, implants
+  [+] list_tasks           List recent PoshC2 tasks                 recon, tasks
+  [+] execute_command      Queue a command on implant               execution, command
+  [+] generate_payload     Generate a PoshC2 payload                payload, generate
+  [+] get_history          Get command history                      recon, history
 
-escanor: c2_frameworks/koadic> set STAGER_TYPE js/mshta
-STAGER_TYPE => js/mshta
+# Select a specific action
+escanor: poshc2> action execute_command
 
-escanor: c2_frameworks/koadic> run -v --operator "red.team"
+# Set required options
+escanor: poshc2> set poshc2_database /var/lib/poshc2/poshc2.db
+escanor: poshc2> set implant_id ABC123
+escanor: poshc2> set command whoami
+
+# Execute only that action
+escanor: poshc2> run
 ```
 
-#### One-Liner Execution
+### Playbook with Actions
 
-```bash
-escanor> execute c2_frameworks/koadic LISTENER_HOST=192.168.1.100 LISTENER_PORT=4444 STAGER_TYPE=js/mshta
+```yaml
+name: "C2 Operations"
+description: "Execute specific C2 actions"
+
+steps:
+  - module: "c2_frameworks/poshc2"
+    action: "list_implants"  # Specific action
+    options:
+      poshc2_database: "/var/lib/poshc2/poshc2.db"
+  
+  - module: "c2_frameworks/poshc2"
+    action: "execute_command"
+    options:
+      poshc2_database: "/var/lib/poshc2/poshc2.db"
+      implant_id: "{{implant_id}}"
+      command: "whoami"
+  
+  - module: "c2_frameworks/empire_c2"
+    action: "generate_stager"
+    options:
+      empire_host: "10.0.0.1"
+      empire_port: "1337"
+      listener_name: "http_listener"
 ```
-
-Note: For one-liner execution with actions, use the `--action` flag (coming soon) or load the module first.
 
 ### Programmatic Usage
 
@@ -83,304 +86,313 @@ from core.module_manager import ModuleManager
 
 mm = ModuleManager()
 
-# Get module
-module = mm.get_module("c2_frameworks/koadic")
-
-# List available actions
-actions = module.list_actions()
-for name, action_def in actions.items():
-    print(f"{name}: {action_def.description}")
-
-# Set options
-module.set_option("listener_host", "192.168.1.100")
-module.set_option("listener_port", "4444")
-module.set_option("stager_type", "js/mshta")
-
 # Execute specific action
 result = mm.run_module(
-    "c2_frameworks/koadic",
-    action="generate_stager",  # Specify the action
-    verbose=True
+    "c2_frameworks/poshc2",
+    action="execute_command",  # Specific action
+    options={
+        "poshc2_database": "/var/lib/poshc2/poshc2.db",
+        "implant_id": "ABC123",
+        "command": "whoami"
+    }
 )
+
+print(result.data)
 ```
 
-## Creating Modules with Actions
+## Available Actions by Module
 
-### Example Module Structure
+### C2 Frameworks
+
+#### Empire C2 (`c2_frameworks/empire_c2`)
+- `connect` - Connect to Empire C2 and retrieve status
+- `list_listeners` - List all active Empire listeners
+- `list_agents` - List all active Empire agents
+- `create_listener` - Create a new Empire listener
+- `generate_stager` - Generate a stager payload
+- `execute_command` - Execute command on agent
+
+#### PoshC2 (`c2_frameworks/poshc2`)
+- `list_implants` - List all active PoshC2 implants
+- `list_tasks` - List recent PoshC2 tasks
+- `execute_command` - Queue command on implant
+- `generate_payload` - Generate PoshC2 payload
+- `get_history` - Get command history
+
+#### Koadic (`c2_frameworks/koadic`)
+- `list_modules` - List available Koadic modules
+- `start_listener` - Start a listener
+- `generate_stager` - Generate payloads
+- `execute_module` - Execute on zombies
+- `list_zombies` - List compromised hosts
+
+### Evasion
+
+#### EDRSilencer (`evasion/edrsilencer`)
+- `list_techniques` - List available evasion techniques
+- `apply_technique` - Apply specific evasion technique
+- `test_evasion` - Test evasion capabilities
+- `generate_payload` - Generate evasive payload
+
+### Reconnaissance
+
+#### Port Scanner (`reconnaissance/port_scan`)
+- `scan_tcp` - TCP port scan
+- `scan_udp` - UDP port scan
+- `scan_common` - Scan common ports only
+- `identify_services` - Identify services on open ports
+
+#### Web Scanner (`reconnaissance/web_scan`)
+- `scan_server` - Scan web server info
+- `analyze_headers` - Analyze security headers
+- `detect_tech` - Detect web technologies
+- `check_ssl` - Check SSL/TLS configuration
+
+#### Vulnerability Scanner (`reconnaissance/vuln_scan`)
+- `scan_service` - Scan service for vulns
+- `check_cve` - Check specific CVE
+- `assess_risk` - Assess overall risk level
+
+### Cloud - Entra ID
+
+#### Service Principal Assessment (`cloud/entra/sp_assessment`)
+- `assess_credentials` - Assess SP credentials
+- `assess_permissions` - Assess SP permissions
+- `assess_managed_identities` - Assess managed identities
+- `full_assessment` - Complete assessment
+
+#### Conditional Access Validator (`cloud/entra/ca_validator`)
+- `validate_policy` - Validate single policy
+- `test_user_access` - Test user access
+- `check_misconfigurations` - Check for misconfigs
+
+### Exploitation - Privilege Escalation
+
+#### GodPotato (`exploitation/privesc/godpotato`)
+- `escalate` - Execute privilege escalation
+- `check_prerequisites` - Check requirements
+- `execute_command` - Execute command as SYSTEM
+
+#### PrintSpoofer (`exploitation/privesc/printspoofer`)
+- `escalate` - Execute PrintSpoofer
+- `interactive` - Run in interactive mode
+- `check_spooler` - Check spooler service
+
+## Creating Actions in Your Modules
+
+### Step 1: Import the Action Decorator
 
 ```python
-from core.base_module import BaseModule
-
-class MyModule(BaseModule):
-    def __init__(self):
-        super().__init__()
-        self.name = "my_module"
-        self.display_name = "My Custom Module"
-        self.description = "Demonstrates fine-grained actions"
-        self.category = "custom"
-        
-        # Define options
-        self.options = {
-            "target": {
-                "value": "",
-                "required": True,
-                "description": "Target IP or hostname"
-            },
-            "port": {
-                "value": "445",
-                "required": False,
-                "description": "Target port"
-            }
-        }
-        
-        # Register actions
-        self.register_action(
-            name="scan",
-            description="Perform network scan",
-            method_name="do_scan",
-            required_options=["target"],
-            optional_options=["port"],
-            tags=["recon", "network"]
-        )
-        
-        self.register_action(
-            name="exploit",
-            description="Launch exploit against target",
-            method_name="do_exploit",
-            required_options=["target"],
-            tags=["offense", "exploit"]
-        )
-    
-    def do_scan(self) -> dict:
-        """Execute scan action"""
-        target = self.get_option("target")
-        port = self.get_option("port")
-        
-        # Scan logic here
-        return {
-            "success": True,
-            "data": {"scanned": target, "port": port}
-        }
-    
-    def do_exploit(self) -> dict:
-        """Execute exploit action"""
-        target = self.get_option("target")
-        
-        # Exploit logic here
-        return {
-            "success": True,
-            "data": {"exploited": target}
-        }
-    
-    def run(self) -> dict:
-        """Default run method (also registered as 'run' action)"""
-        return self.do_scan()
+from core.base_module import BaseModule, action
 ```
 
-### Using the @action Decorator
-
-```python
-from core.base_module import BaseModule
-
-class MyModule(BaseModule):
-    def __init__(self):
-        super().__init__()
-        self.name = "decorated_module"
-        # ... other initialization ...
-    
-    @action(name="quick_scan", 
-            description="Quick network scan",
-            required_options=["target"],
-            tags=["fast", "recon"])
-    def quick_scan(self) -> dict:
-        # Implementation
-        pass
-    
-    @action(name="deep_scan",
-            description="Comprehensive network scan",
-            required_options=["target", "ports"],
-            tags=["thorough", "recon"])
-    def deep_scan(self) -> dict:
-        # Implementation
-        pass
-```
-
-## Playbook Integration
-
-Playbooks can now specify which action to execute for each step:
-
-```yaml
-name: "C2 Framework Coordination"
-description: "Coordinated C2 operations with fine-grained control"
-author: "Red Team"
-created: "2024-01-01"
-
-steps:
-  - module: "c2_frameworks/koadic"
-    action: "start_listener"  # Execute specific action
-    description: "Start listener for callbacks"
-    options:
-      LISTENER_HOST: "192.168.1.100"
-      LISTENER_PORT: "4444"
-    enabled: true
-    critical: true
-
-  - module: "c2_frameworks/koadic"
-    action: "generate_stager"  # Different action, same module
-    description: "Generate payload for deployment"
-    options:
-      STAGER_TYPE: "js/mshta"
-    enabled: true
-    critical: false
-
-  - module: "c2_frameworks/koadic"
-    action: "list_zombies"  # Another action
-    description: "Check for compromised hosts"
-    options: {}
-    enabled: true
-    critical: false
-```
-
-## Action Definition Fields
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `name` | string | Yes | Short identifier used in commands |
-| `description` | string | Yes | Human-readable description |
-| `method_name` | string | Yes | Method to call on the module |
-| `required_options` | list | No | Options that must be set before execution |
-| `optional_options` | list | No | Options that may be used |
-| `tags` | list | No | Tags for categorization and search |
-
-## Best Practices
-
-### When to Use Actions
-
-1. **Multiple Distinct Operations**: When a module performs several unrelated tasks
-2. **Workflow Stages**: When operations have clear stages (setup → execute → cleanup)
-3. **C2 Frameworks**: Perfect for C2 modules with distinct capabilities
-4. **Tool Wrappers**: When wrapping external tools with multiple modes
-
-### Naming Conventions
-
-- Use verb-noun format: `generate_payload`, `start_listener`, `list_modules`
-- Be descriptive but concise
-- Use consistent terminology across modules
-
-### Option Management
-
-- Define action-specific required options
-- Use `validate_options()` to check before execution
-- Document option requirements in action descriptions
-
-## Migration Guide
-
-### Updating Existing Modules
-
-If you have existing modules and want to add action support:
-
-1. **Keep backward compatibility**: The default `run()` method is automatically registered as an action
-2. **Add new actions incrementally**: Register additional actions in `__init__()`
-3. **Update playbooks**: Add `action:` fields to playbook steps where needed
-
-### Example Migration
-
-**Before:**
-```python
-class OldModule(BaseModule):
-    def run(self):
-        # Does everything
-        pass
-```
-
-**After:**
-```python
-class NewModule(BaseModule):
-    def __init__(self):
-        super().__init__()
-        # Register granular actions
-        self.register_action(
-            name="phase1",
-            description="Initial reconnaissance",
-            method_name="do_recon"
-        )
-        self.register_action(
-            name="phase2", 
-            description="Exploitation",
-            method_name="do_exploit"
-        )
-    
-    def do_recon(self):
-        # Recon logic
-        pass
-    
-    def do_exploit(self):
-        # Exploit logic
-        pass
-    
-    def run(self):
-        # Default behavior - can call both or just one
-        return self.do_recon()
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**"Action not found"**
-- Check spelling of action name
-- Use `actions` command to see available actions
-- Ensure action is registered in module's `__init__()`
-
-**"Missing required option"**
-- Each action can have its own required options
-- Use `show options` to see what's needed
-- Set options before running the action
-
-**"Method not found"**
-- The `method_name` in action registration must match an actual method
-- Check for typos in method names
-
-## Advanced Features
-
-### Dynamic Action Registration
+### Step 2: Register Actions in `__init__`
 
 ```python
 def __init__(self):
     super().__init__()
+    # ... your existing init code ...
     
-    # Register actions based on configuration
-    if self.check_feature_available("advanced"):
-        self.register_action(
-            name="advanced_mode",
-            description="Run with advanced features",
-            method_name="run_advanced"
-        )
+    # Make options not required by default (actions will specify)
+    for opt in self.options.values():
+        opt['required'] = False
+    
+    self._register_actions()
+
+def _register_actions(self):
+    """Register all available actions."""
+    
+    @action(
+        name="list_resources",
+        description="List all resources",
+        required_options=["database_path"],
+        tags=["recon", "list"]
+    )
+    def list_resources():
+        return self._list_resources()
+    
+    @action(
+        name="create_resource",
+        description="Create a new resource",
+        required_options=["database_path", "resource_name"],
+        tags=["create", "setup"]
+    )
+    def create_resource_action():
+        name = self.get_option("resource_name")
+        return self.create_resource(name)
 ```
 
-### Action Chaining
+### Step 3: Create Internal Methods
 
-Create playbooks that chain multiple actions from the same or different modules:
+```python
+def _list_resources(self) -> ModuleResult:
+    """Internal method to list resources."""
+    result = ModuleResult()
+    # ... implementation ...
+    return result
+
+def create_resource(self, name: str) -> ModuleResult:
+    """Public method to create resource."""
+    result = ModuleResult()
+    # ... implementation ...
+    return result
+```
+
+### Step 4: Update `run()` Method
+
+```python
+def run(self) -> ModuleResult:
+    """Default behavior when no action specified."""
+    return self._list_resources()  # Or any default action
+```
+
+## Best Practices
+
+### 1. Action Naming
+- Use verb-noun format: `list_agents`, `generate_payload`
+- Be specific and descriptive
+- Keep names consistent across similar modules
+
+### 2. Required Options
+- Only mark options as required at the action level
+- Module-level options should be optional
+- Each action specifies what it needs
+
+### 3. Tags
+- Use consistent tagging: `recon`, `execution`, `payload`, `setup`
+- Helps with filtering and search
+- Minimum 2 tags per action
+
+### 4. Error Handling
+- Return `ModuleResult` from all actions
+- Set `success=False` and `error` on failure
+- Log appropriately with `log_error`, `log_success`
+
+### 5. Documentation
+- Document each action's purpose
+- Include example usage
+- List required options clearly
+
+## Migration Guide
+
+### Before (Old Style)
+```python
+class MyModule(BaseModule):
+    def __init__(self):
+        self.options = {
+            "TARGET": {"value": "", "required": True}
+        }
+    
+    def run(self):
+        # Does everything
+        self.scan()
+        self.exploit()
+        self.post_exploit()
+```
+
+### After (Fine-Grained Actions)
+```python
+from core.base_module import BaseModule, action
+
+class MyModule(BaseModule):
+    def __init__(self):
+        self.options = {
+            "TARGET": {"value": "", "required": False}  # Not required!
+        }
+        self._register_actions()
+    
+    def _register_actions(self):
+        @action(
+            name="scan",
+            description="Scan target",
+            required_options=["TARGET"],
+            tags=["recon"]
+        )
+        def scan_action():
+            return self._scan()
+        
+        @action(
+            name="exploit",
+            description="Exploit target",
+            required_options=["TARGET", "PAYLOAD"],
+            tags=["exploitation"]
+        )
+        def exploit_action():
+            return self._exploit()
+    
+    def run(self):
+        # Default behavior
+        return self._scan()
+```
+
+## Troubleshooting
+
+### Action Not Found
+```
+Error: Action 'invalid_action' not found in module
+```
+**Solution**: Run `actions` command to see available actions
+
+### Missing Required Options
+```
+Error: Missing required option: TARGET
+```
+**Solution**: Check action's required options with `show actions`
+
+### Option Validation Failed
+```
+Error: Action validation failed
+```
+**Solution**: Ensure all required options are set before running
+
+## Advanced Features
+
+### Action Chaining in Playbooks
 
 ```yaml
 steps:
   - module: "reconnaissance/port_scan"
     action: "scan_tcp"
-    options:
-      PORTS: "1-1000"
+    output_var: "scan_results"
   
-  - module: "exploitation/web_scanner"
-    action: "scan_found_ports"
+  - module: "reconnaissance/web_scan"
+    action: "scan_server"
     options:
-      USE_RESULTS_FROM: "reconnaissance/port_scan"
+      TARGET: "{{scan_results.open_ports[0].host}}"
+      PORT: "{{scan_results.open_ports[0].port}}"
+```
+
+### Conditional Execution
+
+```yaml
+steps:
+  - module: "c2_frameworks/poshc2"
+    action: "list_implants"
+    condition: "result.count > 0"
+    next_action: "execute_command"
+```
+
+### Parallel Actions
+
+```yaml
+steps:
+  - module: "reconnaissance/port_scan"
+    action: "scan_tcp"
+    parallel: true
+  
+  - module: "reconnaissance/web_scan"
+    action: "scan_server"
+    parallel: true
 ```
 
 ## Summary
 
-Fine-grained actions give you surgical precision in your operations:
+The fine-grained actions framework provides:
+- ✅ Surgical precision for specific behaviors
+- ✅ Better playbook control
+- ✅ Clear separation of concerns
+- ✅ Easier testing and debugging
+- ✅ Flexible module design
+- ✅ Consistent interface across modules
 
-- **Modules** are containers for related functionality
-- **Actions** are the specific behaviors you want to execute
-- **Playbooks** orchestrate actions into curated workflows
-
-This architecture separates concerns while maintaining flexibility, making the framework more versatile for both automated playbooks and manual operations.
+Use `actions` command in any module to see what's available!

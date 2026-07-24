@@ -5,7 +5,7 @@ Basic vulnerability detection based on service banners and versions
 """
 
 from typing import Dict, List, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 
 
 class VulnerabilityScanner(BaseModule):

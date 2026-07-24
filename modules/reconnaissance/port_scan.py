@@ -6,7 +6,7 @@ Network reconnaissance - scans for open ports on target systems
 
 import socket
 from typing import Dict, List, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 
 
 class PortScanner(BaseModule):
