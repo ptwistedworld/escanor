@@ -4,41 +4,34 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Dependencies
-.venv/
-venv/
+.Python
 env/
-.env
-.env.local
-.env.*
+venv/
+.venv/
+.ENV
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Build artifacts
-dist/
+# Generated folders
 build/
+dist/
 *.egg-info/
 
 # Logs
 *.log
 
-# Editors
+# Environment
+.env
+.env.local
+.env.*
+.env~local
+.env~remote
+
+# Editor
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Temporary files
-*.tmp
-*.temp
-
-# MyPy
-.mypy_cache/
-
-# Pytest
-.pytest_cache/
+*~
 ```
