@@ -16,6 +16,13 @@ class KoadicModule(BaseModule):
     """
     Module to interface with Koadic framework.
     Requires Koadic to be installed and configured separately.
+    
+    This module exposes multiple fine-grained actions for precise control:
+    - list_modules: List available Koadic modules
+    - start_listener: Start a Koadic listener
+    - generate_stager: Generate a stager payload
+    - execute_module: Execute a module on a zombie
+    - list_zombies: List active zombies
     """
 
     def __init__(self):
@@ -61,6 +68,46 @@ class KoadicModule(BaseModule):
                 "description": "Target IP or hostname"
             }
         }
+        
+        # Register fine-grained actions
+        self.register_action(
+            name="list_modules",
+            description="List all available Koadic modules",
+            method_name="run",
+            tags=["recon", "modules"]
+        )
+        
+        self.register_action(
+            name="start_listener",
+            description="Start a Koadic listener to receive connections",
+            method_name="start_listener",
+            required_options=["listener_host", "listener_port"],
+            tags=["setup", "listener"]
+        )
+        
+        self.register_action(
+            name="generate_stager",
+            description="Generate a stager payload for deployment",
+            method_name="generate_stager",
+            required_options=["listener_host", "listener_port"],
+            optional_options=["stager_type"],
+            tags=["payload", "offense"]
+        )
+        
+        self.register_action(
+            name="execute_module",
+            description="Execute a Koadic module on a specific zombie",
+            method_name="execute_module_wrapper",
+            required_options=["zombie_id", "module_name"],
+            tags=["execution", "post-exploitation"]
+        )
+        
+        self.register_action(
+            name="list_zombies",
+            description="List all active zombies (compromised hosts)",
+            method_name="list_zombies",
+            tags=["recon", "zombies"]
+        )
 
     def check_requirements(self) -> bool:
         """Check if Koadic is installed and accessible."""
@@ -255,6 +302,33 @@ class KoadicModule(BaseModule):
         
         return result
 
+    def execute_module_wrapper(self) -> ModuleResult:
+        """Wrapper for execute_module action to work with the action system.
+        
+        This wrapper reads ZOMBIE_ID and MODULE_NAME from options and calls execute_module.
+        Additional options can be passed via EXECUTE_OPTIONS.
+        """
+        zombie_id = self.get_option("zombie_id")
+        module_name = self.get_option("module_name")
+        
+        if not zombie_id or not module_name:
+            result = ModuleResult()
+            result.success = False
+            result.error = "Missing required options: zombie_id and module_name"
+            return result
+        
+        # Parse additional options if provided
+        exec_options_str = self.get_option("execute_options") or ""
+        exec_options = {}
+        if exec_options_str:
+            # Parse comma-separated key=value pairs
+            for pair in exec_options_str.split(","):
+                if "=" in pair:
+                    key, value = pair.split("=", 1)
+                    exec_options[key.strip()] = value.strip()
+        
+        return self.execute_module(zombie_id, module_name, exec_options)
+    
     def execute_module(self, zombie_id: str, module_name: str, options: Dict = None) -> ModuleResult:
         """Execute a Koadic module on a specific zombie."""
         result = ModuleResult()

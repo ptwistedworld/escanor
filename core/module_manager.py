@@ -114,9 +114,20 @@ class ModuleManager:
         return self.categories
 
     def run_module(self, module_name: str, options: Optional[Dict] = None,
-                   verbose: bool = False, write_report: bool = True,
-                   operator: str = "unknown", notes: str = "") -> Optional[Dict[str, Any]]:
-        """Run a specific module with optional parameters"""
+                   action: Optional[str] = None, verbose: bool = False, 
+                   write_report: bool = True, operator: str = "unknown", 
+                   notes: str = "") -> Optional[Dict[str, Any]]:
+        """Run a specific module with optional parameters and action selection
+        
+        Args:
+            module_name: Name of the module to run
+            options: Dictionary of option values
+            action: Specific action to execute (if module supports multiple actions)
+            verbose: Whether to show detailed output
+            write_report: Whether to write results to a report
+            operator: Name of the operator running the module
+            notes: Additional notes for the report
+        """
         module = self.get_module(module_name)
 
         if not module:
@@ -127,20 +138,37 @@ class ModuleManager:
             print(f"\n[*] Loading module: {module.name}")
             print(f"    Category: {module.category}")
             print(f"    Description: {module.description}")
+            
+            # Show available actions if any
+            actions = module.list_actions()
+            if actions and len(actions) > 1:
+                print(f"    Available actions: {', '.join(actions.keys())}")
+                if action:
+                    print(f"    Selected action: {action}")
 
         # Set options if provided
         if options:
             for key, value in options.items():
                 module.set_option(key, value)
 
+        # Set action if specified
+        if action:
+            if not module.set_action(action):
+                print(f"[!] Action '{action}' not found in module '{module_name}'")
+                print(f"[*] Available actions: {', '.join(module.list_actions().keys())}")
+                return None
+
         # Validate and run
         if module.validate_options():
             if verbose:
-                print(f"\n[*] Executing {module.name}...")
+                current_action = module.get_current_action()
+                action_text = f" action '{current_action}'" if current_action else ""
+                print(f"\n[*] Executing{action_text} {module.name}...")
 
             start_time = time.time()
             try:
-                results = module.run()
+                # Execute the selected action or default run
+                results = module.execute_action()
                 execution_time = time.time() - start_time
                 module.results = results
 
@@ -154,6 +182,7 @@ class ModuleManager:
                         module_name=module_name,
                         results=results,
                         options_used=module.options.copy(),
+                        action_used=action,
                         execution_time=execution_time,
                         operator=operator,
                         notes=notes
@@ -164,6 +193,8 @@ class ModuleManager:
                 return results
             except Exception as e:
                 print(f"[!] Module execution failed: {e}")
+                import traceback
+                traceback.print_exc()
                 return None
         else:
             print(f"[!] Module validation failed")

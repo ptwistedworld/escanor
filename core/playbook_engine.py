@@ -67,7 +67,17 @@ class PlaybookEngine:
     def execute_playbook(self, playbook_name: str, 
                         options: Optional[Dict] = None,
                         verbose: bool = False) -> Dict[str, Any]:
-        """Execute a playbook"""
+        """Execute a playbook
+        
+        Playbook steps can now specify actions for fine-grained control:
+        
+        steps:
+          - module: "c2_frameworks/koadic"
+            action: "generate_stager"  # Execute specific action
+            options:
+              STAGER_TYPE: "js/mshta"
+            enabled: true
+        """
         if playbook_name not in self.playbooks:
             print(f"[!] Playbook not found: {playbook_name}")
             print("[*] Use 'playbook list' to see available playbooks")
@@ -91,6 +101,7 @@ class PlaybookEngine:
         
         for i, step in enumerate(steps, 1):
             module_name = step.get('module')
+            step_action = step.get('action')  # New: support for actions
             step_options = step.get('options', {})
             enabled = step.get('enabled', True)
             
@@ -104,18 +115,21 @@ class PlaybookEngine:
             merged_options.update(step_options)
             
             if verbose:
-                print(f"\n[Step {i}/{len(steps)}] Running: {module_name}")
+                action_text = f" (action: {step_action})" if step_action else ""
+                print(f"\n[Step {i}/{len(steps)}] Running: {module_name}{action_text}")
             
-            # Execute the module
+            # Execute the module with optional action
             result = self.module_manager.run_module(
                 module_name, 
                 options=merged_options,
+                action=step_action,  # Pass action if specified
                 verbose=verbose
             )
             
             results['steps_results'].append({
                 'step': i,
                 'module': module_name,
+                'action': step_action,
                 'result': result,
                 'success': result is not None
             })
