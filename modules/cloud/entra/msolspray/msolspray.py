@@ -7,7 +7,7 @@ Reference: https://github.com/dafthack/MSOLSpray
 Category: Cloud/Entra ID - Credential Testing
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 import json
 import os

@@ -7,7 +7,7 @@ import os
 import subprocess
 import json
 from typing import Dict, List, Optional, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 
 
@@ -36,7 +36,7 @@ class PoshC2Module(BaseModule):
         self.options = {
             "poshc2_database": {
                 "value": "/var/lib/poshc2/poshc2.db",
-                "required": True,
+                "required": False,
                 "description": "Path to PoshC2 SQLite database"
             },
             "poshc2_dir": {
@@ -55,6 +55,61 @@ class PoshC2Module(BaseModule):
                 "description": "Command to execute on implant"
             }
         }
+        
+        # Register actions
+        self._register_actions()
+    
+    def _register_actions(self):
+        """Register all available actions for this module."""
+        
+        @action(
+            name="list_implants",
+            description="List all active PoshC2 implants",
+            required_options=["poshc2_database"],
+            tags=["recon", "implants"]
+        )
+        def list_implants():
+            return self._list_implants()
+        
+        @action(
+            name="list_tasks",
+            description="List recent PoshC2 tasks",
+            required_options=["poshc2_database"],
+            tags=["recon", "tasks"]
+        )
+        def list_tasks():
+            return self._list_tasks()
+        
+        @action(
+            name="execute_command",
+            description="Queue a command for execution on a specific implant",
+            required_options=["poshc2_database", "implant_id", "command"],
+            tags=["execution", "command"]
+        )
+        def execute_command_action():
+            implant_id = self.get_option("implant_id")
+            command = self.get_option("command")
+            return self.execute_command(implant_id, command)
+        
+        @action(
+            name="generate_payload",
+            description="Generate a PoshC2 payload",
+            required_options=["poshc2_dir"],
+            tags=["payload", "generate"]
+        )
+        def generate_payload_action():
+            payload_type = self.get_option("command") or "powershell"
+            return self.generate_payload(payload_type)
+        
+        @action(
+            name="get_history",
+            description="Get command history for an implant",
+            required_options=["poshc2_database"],
+            tags=["recon", "history"]
+        )
+        def get_history_action():
+            implant_id = self.get_option("implant_id")
+            return self.get_implant_history(implant_id)
 
     def check_requirements(self) -> bool:
         """Check if PoshC2 database is accessible."""
@@ -83,8 +138,66 @@ class PoshC2Module(BaseModule):
             self.log_error(f"Cannot access PoshC2 database: {str(e)}")
             return False
 
+    def _list_implants(self) -> ModuleResult:
+        """List all active PoshC2 implants."""
+        result = ModuleResult()
+        
+        try:
+            import sqlite3
+            
+            db_path = self.get_option("poshc2_database")
+            
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get all implants
+            cursor.execute("SELECT * FROM implants ORDER BY last_seen DESC")
+            implants = [dict(row) for row in cursor.fetchall()]
+            
+            conn.close()
+            
+            result.success = True
+            result.data = {"implants": implants, "count": len(implants)}
+            self.log_success(f"Found {len(implants)} active implants")
+            
+        except Exception as e:
+            result.success = False
+            result.error = str(e)
+        
+        return result
+    
+    def _list_tasks(self) -> ModuleResult:
+        """List recent PoshC2 tasks."""
+        result = ModuleResult()
+        
+        try:
+            import sqlite3
+            
+            db_path = self.get_option("poshc2_database")
+            
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get tasks
+            cursor.execute("SELECT * FROM tasks ORDER BY timestamp DESC LIMIT 50")
+            tasks = [dict(row) for row in cursor.fetchall()]
+            
+            conn.close()
+            
+            result.success = True
+            result.data = {"tasks": tasks, "count": len(tasks)}
+            self.log_success(f"Retrieved {len(tasks)} recent tasks")
+            
+        except Exception as e:
+            result.success = False
+            result.error = str(e)
+        
+        return result
+
     def run(self) -> ModuleResult:
-        """Execute PoshC2 operations."""
+        """Execute default PoshC2 operations - list implants and tasks."""
         result = ModuleResult()
         
         try:

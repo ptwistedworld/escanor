@@ -4,7 +4,7 @@ Entra ID Service Principal Assessment Module
 Assesses service principals and managed identities for security misconfigurations
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from typing import Dict, Any, List
 from datetime import datetime
 

@@ -6,7 +6,7 @@ Web application reconnaissance - scans for web technologies, directories, and vu
 
 import socket
 from typing import Dict, List, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 
 
 class WebScanner(BaseModule):

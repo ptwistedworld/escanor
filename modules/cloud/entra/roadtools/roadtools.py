@@ -7,7 +7,7 @@ Reference: https://github.com/dirkjanm/roadtools
 Category: Cloud/Entra ID - Azure AD Enumeration
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 import json
 import os

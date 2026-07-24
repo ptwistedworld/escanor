@@ -4,7 +4,7 @@ Entra ID Conditional Access Policy Validator Module
 Tests and validates Conditional Access policies in Azure Entra ID
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from typing import Dict, Any, List
 import json
 

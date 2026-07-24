@@ -7,7 +7,7 @@ Reference: https://github.com/drk1wi/Modlishka
 Category: Cloud/Entra ID - Phishing & Credential Operations
 """
 
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 import subprocess
 import json

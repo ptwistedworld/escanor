@@ -8,7 +8,7 @@ import os
 import subprocess
 import json
 from typing import Dict, List, Optional, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 
 

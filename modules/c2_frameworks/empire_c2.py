@@ -7,7 +7,7 @@ import os
 import subprocess
 import json
 from typing import Dict, List, Optional, Any
-from core.base_module import BaseModule
+from core.base_module import BaseModule, action
 from core.module_result import ModuleResult
 
 
@@ -36,22 +36,22 @@ class EmpireC2Module(BaseModule):
         self.options = {
             "empire_host": {
                 "value": "localhost",
-                "required": True,
+                "required": False,
                 "description": "Empire server host"
             },
             "empire_port": {
                 "value": "1337",
-                "required": True,
+                "required": False,
                 "description": "Empire REST API port"
             },
             "username": {
                 "value": "empireadmin",
-                "required": True,
+                "required": False,
                 "description": "Empire API username"
             },
             "password": {
                 "value": "password123",
-                "required": True,
+                "required": False,
                 "description": "Empire API password"
             },
             "listener_name": {
@@ -65,6 +65,74 @@ class EmpireC2Module(BaseModule):
                 "description": "Type of stager to generate"
             }
         }
+        
+        # Register actions
+        self._register_actions()
+    
+    def _register_actions(self):
+        """Register all available actions for this module."""
+        
+        @action(
+            name="connect",
+            description="Connect to Empire C2 and retrieve status",
+            required_options=["empire_host", "empire_port", "username", "password"],
+            tags=["recon", "status"]
+        )
+        def connect():
+            return self._connect_to_empire()
+        
+        @action(
+            name="list_listeners",
+            description="List all active Empire listeners",
+            required_options=["empire_host", "empire_port", "username", "password"],
+            tags=["recon", "listeners"]
+        )
+        def list_listeners():
+            return self._list_listeners()
+        
+        @action(
+            name="list_agents",
+            description="List all active Empire agents",
+            required_options=["empire_host", "empire_port", "username", "password"],
+            tags=["recon", "agents"]
+        )
+        def list_agents():
+            return self._list_agents()
+        
+        @action(
+            name="create_listener",
+            description="Create a new Empire listener",
+            required_options=["empire_host", "empire_port", "username", "password", "listener_name"],
+            tags=["setup", "listener"]
+        )
+        def create_listener_action():
+            name = self.get_option("listener_name")
+            listener_type = self.get_option("stager_type") or "http"
+            return self.create_listener(name, listener_type)
+        
+        @action(
+            name="generate_stager",
+            description="Generate a stager payload for a listener",
+            required_options=["empire_host", "empire_port", "username", "password", "listener_name"],
+            tags=["payload", "stager"]
+        )
+        def generate_stager_action():
+            listener_name = self.get_option("listener_name")
+            stager_type = self.get_option("stager_type") or "multi/launcher"
+            return self.generate_stager(listener_name, stager_type)
+        
+        @action(
+            name="execute_command",
+            description="Execute a command on a specific agent",
+            required_options=["empire_host", "empire_port", "username", "password"],
+            tags=["execution", "command"]
+        )
+        def execute_command_action():
+            self.log_warning("This action requires additional implementation based on agent ID")
+            result = ModuleResult()
+            result.success = False
+            result.error = "Agent ID not specified. Use programmatic interface for agent-specific commands."
+            return result
 
     def check_requirements(self) -> bool:
         """Check if Empire is accessible."""
@@ -84,8 +152,8 @@ class EmpireC2Module(BaseModule):
             self.log_error(f"Cannot connect to Empire: {str(e)}")
             return False
 
-    def run(self) -> ModuleResult:
-        """Execute Empire operations."""
+    def _connect_to_empire(self) -> ModuleResult:
+        """Internal method to connect and get status."""
         result = ModuleResult()
         
         try:
@@ -139,6 +207,86 @@ class EmpireC2Module(BaseModule):
             self.log_error(f"Empire operation failed: {str(e)}")
         
         return result
+    
+    def _list_listeners(self) -> ModuleResult:
+        """List all Empire listeners."""
+        result = ModuleResult()
+        
+        try:
+            import requests
+            
+            host = self.get_option("empire_host")
+            port = self.get_option("empire_port")
+            username = self.get_option("username")
+            password = self.get_option("password")
+            
+            base_url = f"http://{host}:{port}"
+            
+            # Login
+            login_data = {"username": username, "password": password}
+            login_response = requests.post(f"{base_url}/token", data=login_data, timeout=10)
+            token = login_response.json().get("access_token")
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            # Get listeners
+            listeners_response = requests.get(f"{base_url}/api/listeners", headers=headers, timeout=10)
+            
+            if listeners_response.status_code == 200:
+                listeners = listeners_response.json()
+                result.success = True
+                result.data = {"listeners": listeners, "count": len(listeners)}
+                self.log_success(f"Found {len(listeners)} listeners")
+            else:
+                result.success = False
+                result.error = f"Failed to retrieve listeners: {listeners_response.text}"
+                
+        except Exception as e:
+            result.success = False
+            result.error = str(e)
+        
+        return result
+    
+    def _list_agents(self) -> ModuleResult:
+        """List all Empire agents."""
+        result = ModuleResult()
+        
+        try:
+            import requests
+            
+            host = self.get_option("empire_host")
+            port = self.get_option("empire_port")
+            username = self.get_option("username")
+            password = self.get_option("password")
+            
+            base_url = f"http://{host}:{port}"
+            
+            # Login
+            login_data = {"username": username, "password": password}
+            login_response = requests.post(f"{base_url}/token", data=login_data, timeout=10)
+            token = login_response.json().get("access_token")
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            # Get agents
+            agents_response = requests.get(f"{base_url}/api/agents", headers=headers, timeout=10)
+            
+            if agents_response.status_code == 200:
+                agents = agents_response.json()
+                result.success = True
+                result.data = {"agents": agents, "count": len(agents)}
+                self.log_success(f"Found {len(agents)} active agents")
+            else:
+                result.success = False
+                result.error = f"Failed to retrieve agents: {agents_response.text}"
+                
+        except Exception as e:
+            result.success = False
+            result.error = str(e)
+        
+        return result
+
+    def run(self) -> ModuleResult:
+        """Execute default Empire operations - connect and show status."""
+        return self._connect_to_empire()
 
     def create_listener(self, name: str, listener_type: str = "http", options: Dict = None) -> ModuleResult:
         """Create a new Empire listener."""
