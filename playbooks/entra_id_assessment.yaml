@@ -1,0 +1,79 @@
+name: "Entra ID Comprehensive Assessment"
+description: "Full Azure Entra ID security posture evaluation using all available cloud modules"
+author: "Escanor Team"
+created: "2024-01-24"
+version: "2.0.0"
+
+steps:
+  - module: "cloud/entra/ca_validator"
+    description: "Validate Conditional Access policies"
+    options:
+      TENANT_ID: "{{TENANT_ID}}"
+      VALIDATE_ALL_POLICIES: "True"
+    enabled: true
+    critical: true
+
+  - module: "cloud/entra/device_code_flow"
+    description: "Test Device Code Flow authentication"
+    options:
+      TENANT_ID: "{{TENANT_ID}}"
+      CLIENT_ID: "{{CLIENT_ID}}"
+      SIMULATE_ATTACK: "True"
+    enabled: true
+    critical: false
+
+  - module: "cloud/entra/token_tactics"
+    description: "Azure AD Token Tactics simulation"
+    options:
+      TENANT_ID: "{{TENANT_ID}}"
+      TOKEN_TYPE: "access_token"
+      ATTACK_MODE: "True"
+    enabled: true
+    critical: false
+
+  - module: "cloud/entra/modlishka"
+    description: "Reverse proxy phishing simulation"
+    options:
+      PHISHING_DOMAIN: "{{PHISHING_DOMAIN}}"
+      TARGET_URL: "https://login.microsoftonline.com"
+      HARVEST_CREDENTIALS: "True"
+      STEAL_COOKIES: "True"
+    enabled: true
+    critical: false
+
+  - module: "cloud/entra/msolspray"
+    description: "Password spraying assessment"
+    options:
+      TENANT_ID: "{{TENANT_ID}}"
+      USERLIST: "/path/to/users.txt"
+      PASSWORD: "{{PASSWORD}}"
+      LOCKOUT_THRESHOLD: "5"
+    enabled: true
+    critical: true
+
+  - module: "cloud/entra/roadtools"
+    description: "ROADtools enumeration and analysis"
+    options:
+      TENANT_ID: "{{TENANT_ID}}"
+      COLLECTION_METHOD: "all"
+      OUTPUT_FORMAT: "json"
+    enabled: true
+    critical: false
+
+  - module: "cloud/entra/bark"
+    description: "BloodHound AD relationship collection"
+    options:
+      DOMAIN: "{{DOMAIN}}"
+      COLLECTION_METHOD: "all"
+      OUTPUT_FORMAT: "json"
+    enabled: true
+    critical: false
+
+  - module: "cloud/entra/sp_assessment"
+    description: "Service Principal and Managed Identity assessment"
+    options:
+      TENANT_ID: "{{TENANT_ID}}"
+      ASSESS_ALL_SP: "True"
+      CHECK_PERMISSIONS: "True"
+    enabled: true
+    critical: true

@@ -1,37 +1,50 @@
 ```
+# Compressed archives
+*.tar.gz
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
-env/
 venv/
 .venv/
-.ENV
-.venv.bak/
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Generated folders
-build/
-dist/
-*.egg-info/
-
-# Logs
-*.log
-
-# Environment
 .env
 .env.local
 .env.*
-.env~local
-.env~remote
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage/
+htmlcov/
 
-# Editor
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Build artifacts
+dist/
+build/
+*.o
+*.obj
+*.out
+*.exe
+*.dll
+*.so
+*.a
+
+# Dependencies
+node_modules/
+target/
+.gradle/
 ```
