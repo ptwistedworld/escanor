@@ -77,6 +77,8 @@ class InteractiveShell:
             'execute': self._cmd_execute,
             'search': self._cmd_search,
             'banner': self._cmd_banner,
+            'reports': self._cmd_reports,
+            'report': self._cmd_report,
         }
         
         if cmd in commands:
@@ -93,8 +95,10 @@ Escanor Interactive Shell Commands
 Core Commands:
   help              Show this help message
   use <module>      Select a module to use
-  run               Execute the current module
+  run [opts]        Execute the current module
+                    Options: -v/--verbose, --no-report, --operator <name>, --notes "<text>"
   execute <module> [opts]  Run a module directly without loading (one-liner)
+                           Usage: execute mod/name opt1=val1 opt2=val2
   set <opt> <val>   Set a module option
   show [options]    Show module options or info
   back              Deselect current module
@@ -109,8 +113,13 @@ Playbooks:
   playbook <name>   Execute a playbook
   playbook list     List available playbooks
 
-AI Integration:
+AI Integration (Optional):
   ai <query>        Run AI-assisted command
+                    Note: AI requires ESCANOR_AI_* environment variables
+
+Reporting:
+  reports           List generated reports
+  report <id>       View a specific report
 
 Display:
   banner            Redisplay the Escanor banner
@@ -122,10 +131,12 @@ Examples:
   use reconnaissance/port_scan
   set TARGET 192.168.1.1
   set PORTS 1-1000
-  run
+  run -v --operator "john.doe" --notes "Initial scan"
   execute exploitation/privesc/godpotato cmd="whoami"
   search potato
   ai "suggest next steps for target 192.168.1.1"
+  list cloud/entra
+  playbook purple_team
         """
         print(help_text)
     
@@ -153,7 +164,24 @@ Examples:
             return
         
         verbose = '-v' in args or '--verbose' in args
-        self.module_manager.run_module(self.current_module, verbose=True)
+        no_report = '--no-report' in args
+        
+        # Parse operator and notes from args
+        operator = "unknown"
+        notes = ""
+        for i, arg in enumerate(args):
+            if arg == '--operator' and i + 1 < len(args):
+                operator = args[i + 1]
+            elif arg == '--notes' and i + 1 < len(args):
+                notes = args[i + 1]
+        
+        self.module_manager.run_module(
+            self.current_module, 
+            verbose=True,
+            write_report=not no_report,
+            operator=operator,
+            notes=notes
+        )
     
     def _cmd_set(self, args: list) -> None:
         """Set a module option"""
@@ -290,8 +318,18 @@ Examples:
         
         # Parse additional arguments as options
         options = {}
+        no_report = '--no-report' in args
+        operator = "unknown"
+        notes = ""
+        
         for arg in args[1:]:
-            if '=' in arg:
+            if arg == '--no-report':
+                continue
+            elif arg == '--operator' and args.index(arg) + 1 < len(args):
+                operator = args[args.index(arg) + 1]
+            elif arg == '--notes' and args.index(arg) + 1 < len(args):
+                notes = args[args.index(arg) + 1]
+            elif '=' in arg:
                 key, value = arg.split('=', 1)
                 # Remove quotes if present
                 value = value.strip('"').strip("'")
@@ -305,13 +343,19 @@ Examples:
         if options:
             print(f"[*] Options: {options}")
         
-        # Execute the module
-        result = self.module_manager.run_module(module_name, verbose=True)
+        # Execute the module with reporting
+        result = self.module_manager.run_module(
+            module_name, 
+            verbose=True,
+            write_report=not no_report,
+            operator=operator,
+            notes=notes
+        )
         
-        if result and result.success:
+        if result and result.get("status") == "success":
             print("\n[+] Module execution completed successfully")
         elif result:
-            print(f"\n[-] Module execution failed: {result.error}")
+            print(f"\n[-] Module execution failed: {result.get('error', 'Unknown error')}")
 
     def _cmd_search(self, args: list) -> None:
         """Search modules by name or description"""
@@ -346,3 +390,63 @@ Examples:
         """Redisplay the Escanor banner"""
         from escanor import print_banner
         print_banner()
+
+    def _cmd_reports(self, args: list) -> None:
+        """List all generated reports"""
+        from utils.result_reporter import get_reporter
+        reporter = get_reporter()
+        reports = reporter.list_reports()
+        
+        if not reports:
+            print("\n[!] No reports found. Run a module to generate a report.")
+            return
+        
+        print(f"\n{'='*80}")
+        print("GENERATED REPORTS")
+        print(f"{'='*80}")
+        print(f"{'#':<5} {'Filename':<45} {'Size':<12} {'Created'}")
+        print(f"{'-'*80}")
+        
+        for idx, report in enumerate(reports, 1):
+            filename = report['filename']
+            size = f"{report['size']} bytes"
+            created = report['created'][:19]  # Trim to YYYY-MM-DD HH:MM:SS
+            print(f"{idx:<5} {filename:<45} {size:<12} {created}")
+        
+        print(f"\nTotal: {len(reports)} report(s)")
+        print("Use 'report <number>' to view a specific report")
+
+    def _cmd_report(self, args: list) -> None:
+        """View a specific report"""
+        from utils.result_reporter import get_reporter
+        reporter = get_reporter()
+        reports = reporter.list_reports()
+        
+        if not reports:
+            print("\n[!] No reports found.")
+            return
+        
+        if not args:
+            print("\n[!] Usage: report <number>")
+            print("    Use 'reports' to list available reports")
+            return
+        
+        try:
+            report_num = int(args[0])
+            if report_num < 1 or report_num > len(reports):
+                print(f"[!] Invalid report number. Must be between 1 and {len(reports)}")
+                return
+            
+            report = reports[report_num - 1]
+            
+            print(f"\n{'='*80}")
+            print(f"VIEWING REPORT: {report['filename']}")
+            print(f"{'='*80}\n")
+            
+            with open(report['path'], 'r', encoding='utf-8') as f:
+                print(f.read())
+                
+        except ValueError:
+            print("[!] Invalid report number. Please provide a numeric value.")
+        except Exception as e:
+            print(f"[!] Error reading report: {e}")

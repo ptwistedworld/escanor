@@ -7,9 +7,11 @@ Handles loading, listing, and executing modules
 import os
 import sys
 import importlib.util
+import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from core.base_module import BaseModule
+from utils.result_reporter import get_reporter
 
 
 class ModuleManager:
@@ -19,6 +21,7 @@ class ModuleManager:
         self.modules: Dict[str, BaseModule] = {}
         self.categories: Dict[str, List[str]] = {}
         self.module_path = Path(__file__).parent.parent / "modules"
+        self.reporter = get_reporter()
         self.load_all_modules()
 
     def load_all_modules(self) -> None:
@@ -111,7 +114,8 @@ class ModuleManager:
         return self.categories
 
     def run_module(self, module_name: str, options: Optional[Dict] = None,
-                   verbose: bool = False) -> Optional[Dict[str, Any]]:
+                   verbose: bool = False, write_report: bool = True,
+                   operator: str = "unknown", notes: str = "") -> Optional[Dict[str, Any]]:
         """Run a specific module with optional parameters"""
         module = self.get_module(module_name)
 
@@ -134,13 +138,28 @@ class ModuleManager:
             if verbose:
                 print(f"\n[*] Executing {module.name}...")
 
+            start_time = time.time()
             try:
                 results = module.run()
+                execution_time = time.time() - start_time
                 module.results = results
 
-                if verbose and results:
+                if verbose:
                     print(f"\n[+] Module completed successfully")
-                    print(f"    Results: {results}")
+                    print(f"    Execution time: {execution_time:.2f}s")
+
+                # Write report if enabled
+                if write_report and results:
+                    report_path = self.reporter.write_result(
+                        module_name=module_name,
+                        results=results,
+                        options_used=module.options.copy(),
+                        execution_time=execution_time,
+                        operator=operator,
+                        notes=notes
+                    )
+                    if verbose:
+                        print(f"    Report written to: {report_path}")
 
                 return results
             except Exception as e:
